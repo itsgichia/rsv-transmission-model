@@ -1,0 +1,23 @@
+scenario,group,baseline_per_year,scenario_per_year,averted_per_year,percent_averted
+Maternal vaccine (60% coverage),0-2 months,389.3,208.9,180.4,46.3
+Maternal vaccine (60% coverage),3-5 months,200.1,165.3,34.7,17.4
+Maternal vaccine (60% coverage),6-11 months,192.0,194.9,-3.0,-1.5
+Maternal vaccine (60% coverage),12-23 months,147.4,148.1,-0.7,-0.5
+Maternal vaccine (60% coverage),Under 2 years,928.7,717.3,211.4,22.8
+Nirsevimab at birth (60% coverage),0-2 months,389.3,208.4,180.9,46.5
+Nirsevimab at birth (60% coverage),3-5 months,200.1,118.4,81.6,40.8
+Nirsevimab at birth (60% coverage),6-11 months,192.0,198.5,-6.6,-3.4
+Nirsevimab at birth (60% coverage),12-23 months,147.4,148.6,-1.2,-0.8
+Nirsevimab at birth (60% coverage),Under 2 years,928.7,674.0,254.7,27.4
+"Nirsevimab, April to September births only",0-2 months,389.3,281.8,107.5,27.6
+"Nirsevimab, April to September births only",3-5 months,200.1,177.0,23.0,11.5
+"Nirsevimab, April to September births only",6-11 months,192.0,193.7,-1.8,-0.9
+"Nirsevimab, April to September births only",12-23 months,147.4,147.8,-0.4,-0.3
+"Nirsevimab, April to September births only",Under 2 years,928.7,800.4,128.3,13.8
+Maternal vaccine 60% + nirsevimab for the rest (50%),0-2 months,389.3,149.0,240.2,61.7
+Maternal vaccine 60% + nirsevimab for the rest (50%),3-5 months,200.1,138.1,61.9,30.9
+Maternal vaccine 60% + nirsevimab for the rest (50%),6-11 months,192.0,197.1,-5.1,-2.7
+Maternal vaccine 60% + nirsevimab for the rest (50%),12-23 months,147.4,148.5,-1.1,-0.7
+Maternal vaccine 60% + nirsevimab for the rest (50%),Under 2 years,928.7,632.8,295.9,31.9
+"Nirsevimab 60%, homogeneous mixing",Under 2 years,,,,27.4
+"Nirsevimab 60%, assortative mixing",Under 2 years,,,,27.4
