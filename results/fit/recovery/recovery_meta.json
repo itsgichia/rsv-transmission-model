@@ -1,0 +1,10 @@
+{
+  "draws": 200,
+  "chains": 2,
+  "months": 36,
+  "burn_in_years": 25,
+  "seed": 20260321,
+  "seconds": 7111.575442499976,
+  "n_covered": 8,
+  "n_params": 14
+}

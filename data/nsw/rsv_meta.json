@@ -1,0 +1,24 @@
+{
+  "source": "NSW Health Infectious Diseases Data, https://www1.health.nsw.gov.au/IDD/#/RSV",
+  "api": "https://idd-web.citc.health.nsw.gov.au/APi/Disease/GetReportContent",
+  "fetched": "2026-11-24",
+  "months": [
+    "2022-09",
+    "2026-10"
+  ],
+  "bands": [
+    "<1 year",
+    "1 year",
+    "2-4 years",
+    "5-9 years",
+    "10-19 years",
+    "20-39 years",
+    "40-59 years",
+    "60-79 years"
+  ],
+  "dropped": "ages 80 and over (model age structure ends at 80)",
+  "caveats": "Data excludes persons whose age or gender was unknown, or who were not NSW residents.Graphs were generated on 24 November 2026 and exclude cases reported within the last 48 hours. Data are preliminary and subject to change as updates are received. Refer to Guides and caveats for interpreting infectious disease data ('NSW Data') for aids in interpreting data.",
+  "citation": "NSW Health Notifiable Conditions Information Management System (NCIMS), Communicable Diseases Branch and Centre for Epidemiology and Evidence, NSW Health.",
+  "notifiable_from": "Became notifiable from 1 September 2022",
+  "under5_mismatch_months": []
+}
