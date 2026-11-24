@@ -171,6 +171,20 @@ class Observations:
                 month, year = 1, year + 1
         return labels
 
+    def window(self, start: str | None = None, end: str | None = None) -> "Observations":
+        """Return the months from ``start`` to ``end`` inclusive, both ``YYYY-MM``.
+
+        ``None`` keeps the respective edge. Raises if either label lies outside
+        the observed range or the window is empty.
+        """
+        labels = self.month_labels()
+        first = labels.index(start) if start is not None else 0
+        last = labels.index(end) if end is not None else len(labels) - 1
+        if first > last:
+            raise ValueError(f"empty window {start}..{end}")
+        year, month = (int(x) for x in labels[first].split("-"))
+        return Observations(year, month, self.bands, self.counts[:, first : last + 1], self.population, self.source)
+
     @classmethod
     def from_csv(cls, path: Path | str, population: float, source: str = "") -> "Observations":
         """Read a long-format CSV with columns ``month`` (YYYY-MM), ``age_band``,

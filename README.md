@@ -84,13 +84,27 @@ Note on $R_0$: Hogan's models use a contact matrix, so their transmission coeffi
 - Restricting nirsevimab to babies born April to September roughly halves its benefit here, because babies born in late summer reach their first winter at three to five months old with no protection. Australian programmes handle this with catch-up doses before the season, which this model does not yet include.
 - Combining both products gives the largest reduction.
 
+## Calibration to NSW notifications (in progress)
+
+`rsvmodel/fit.py` fits $R_0$, the seasonal amplitude and peak day, the duration of immunity, a reporting fraction per age band and a negative-binomial dispersion to monthly notification counts by age, using PyMC's sequential Monte Carlo sampler with the ODE model wrapped as a black-box operator. Priors are written down in `Priors` before any data are touched. The right-hand side is compiled with Numba when no immunisation product is present, which makes a likelihood evaluation about 0.06 s.
+
+The data are NSW RSV notifications by month of onset and age band from September 2022, fetched from the NSW Health Infectious Diseases Data dashboard by `scripts/fetch_nsw_rsv.py` into `data/nsw/rsv_monthly_by_age.csv`. The fit uses January 2023 onward: the 2021 and 2022 seasons followed the lifting of COVID-19 restrictions and are out of phase with the endemic seasonality the model assumes.
+
+Before the fit is pointed at real data it has to pass a parameter-recovery test, `scripts/fit_recovery.py`, which simulates counts from known parameters and checks that the truth falls inside the 95% posterior intervals. The first attempt (2 chains of 200 particles, 25-year burn-in, kept in `results/fit/recovery_200draws_25y/`) failed, covering 8 of 14 parameters: $R_0$ and the duration of immunity trade off along a ridge that 36 months of counts barely constrain, and 200 particles were too few to explore it. The rerun uses 1,000 particles and an even burn-in length (the model settles into a two-year cycle at some parameter values, so the burn-in's parity matters). `scripts/fit_nsw.py` is ready to run once the test passes and writes a summary table, the posterior and a posterior predictive check figure.
+
+```bash
+pip install -e ".[fit]"
+python scripts/fit_recovery.py --draws 1000 --chains 2 --cores 2     # about 2 h on a laptop
+python scripts/fit_nsw.py --draws 1000 --chains 2 --cores 2          # only once recovery passes
+```
+
 ## Limitations
 
 - **Mixing is schematic.** Homogeneous mixing overstates infant exposure; the assortative kernel is a plausible shape, not a measured one. Under assortative mixing the baseline infant burden falls by about 14% at the same $R_0$ while the percentage averted by each programme barely moves, because direct protection of newborns dominates. The next step is a measured contact matrix (POLYMOD or the projected Australian matrices).
 - **Absolute numbers are illustrative.** Hospitalisation proportions were fitted under a different mixing structure, so baseline infant rates are higher than observed in some settings. The percentage reductions are the more robust output.
 - Protection reduces susceptibility to infection (as in Hogan's maternal vaccine model), so immunised infants also transmit less. If the products mainly prevent severe disease rather than infection, indirect effects would be smaller.
 - No catch-up dosing, preterm infants, or high-risk second-season doses.
-- The model is not fitted to Australian surveillance data. Fitting to NSW or national notification data (for example by maximum likelihood or Bayesian methods) would be the next step.
+- The scenario results above use literature parameters, not parameters fitted to Australian surveillance data. A Bayesian fit to NSW notifications is in progress (see below) and the scenarios will be re-run from its posterior once the parameter-recovery test passes.
 
 ## Run it
 
@@ -128,7 +142,11 @@ for row in result["summary"]:
 ```
 rsvmodel/model.py        the model: age structure, parameters, contact matrix, ODE right-hand side, simulate()
 rsvmodel/cli.py          command line entry point
+rsvmodel/fit.py          Bayesian calibration: observations, priors, likelihood, SMC fit
 scripts/run_scenarios.py reproduces every figure and the results table
+scripts/fetch_nsw_rsv.py pulls NSW notifications by month and age into data/nsw/
+scripts/fit_recovery.py  parameter-recovery test that gates the real fit
+scripts/fit_nsw.py       fits the model to the NSW counts and draws the posterior predictive check
 tests/                   pytest suite (runs in CI on Python 3.10 and 3.12)
 figures/, results/       outputs of the scenario script, committed so the README renders
 ```

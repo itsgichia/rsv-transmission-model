@@ -134,3 +134,15 @@ def test_save_netcdf_drops_ragged_keeps_string_coords(tmp_path):
     assert "beta" in back["sample_stats"].to_dataset()
     assert back.attrs["population"] == 8.3e6
     assert back.attrs["dropped_for_netcdf"] == "sample_stats/log_marginal_likelihood"
+
+
+def test_window_slices_consecutive_months(synthetic):
+    sub = synthetic.window("2023-03", "2023-08")
+    assert sub.month_labels() == ["2023-03", "2023-04", "2023-05", "2023-06", "2023-07", "2023-08"]
+    assert sub.counts.shape == (len(synthetic.bands), 6)
+    np.testing.assert_array_equal(sub.counts[:, 0], synthetic.counts[:, 2])
+    assert synthetic.window(None, None).month_labels() == synthetic.month_labels()
+    with pytest.raises(ValueError):
+        synthetic.window("2023-08", "2023-03")
+    with pytest.raises(ValueError):
+        synthetic.window("1999-01")
