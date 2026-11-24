@@ -38,7 +38,7 @@ def main(argv=None) -> int:
     parser.add_argument("--chains", type=int, default=2)
     parser.add_argument("--cores", type=int, default=None)
     parser.add_argument("--months", type=int, default=36)
-    parser.add_argument("--burn-in-years", type=int, default=25)
+    parser.add_argument("--burn-in-years", type=int, default=30)
     parser.add_argument("--seed", type=int, default=20260321)
     parser.add_argument("--out", type=Path, default=REPO_ROOT / "results" / "fit" / "recovery")
     args = parser.parse_args(argv)

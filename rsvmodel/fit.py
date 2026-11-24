@@ -271,7 +271,7 @@ def monthly_incidence(
     theta: FitParams,
     obs: Observations,
     base: Params | None = None,
-    burn_in_years: int = 25,
+    burn_in_years: int = 30,
 ) -> np.ndarray:
     """Return modelled new infections per band and month, shape ``(n_bands, n_months)``.
 
@@ -279,6 +279,10 @@ def monthly_incidence(
     ``E / latent_days``, integrated day by day over each month window. The run
     starts from the endemic state reached after ``burn_in_years`` and continues
     from the first of January to the end of the last observed month.
+
+    Keep ``burn_in_years`` even. Where the model runs a two-year cycle the state
+    at the end of the burn-in depends on its parity, and an odd length lands the
+    observation window on the other phase of the cycle.
     """
     p = theta.to_params(base or Params(population=obs.population))
     if p.population != obs.population:
@@ -322,7 +326,7 @@ def log_likelihood(
     alpha: float,
     obs: Observations,
     base: Params | None = None,
-    burn_in_years: int = 25,
+    burn_in_years: int = 30,
 ) -> float:
     """Total NB log-likelihood of the observations under one parameter set."""
     mu = expected_counts(monthly_incidence(theta, obs, base, burn_in_years), rho)
@@ -339,7 +343,7 @@ def simulate_observations(
     population: float,
     bands: Sequence[AgeBand] = DEFAULT_BANDS,
     seed: int = 0,
-    burn_in_years: int = 25,
+    burn_in_years: int = 30,
 ) -> Observations:
     """Draw a synthetic dataset from the model, for parameter-recovery checks."""
     template = Observations(start_year, start_month, tuple(bands), np.zeros((len(bands), n_months)), population, "synthetic")
@@ -358,7 +362,7 @@ def build_model(
     obs: Observations,
     priors: Priors | None = None,
     base: Params | None = None,
-    burn_in_years: int = 25,
+    burn_in_years: int = 30,
 ) -> Any:
     """Build the PyMC model. The ODE enters as a black-box pytensor Op."""
     import pymc as pm
@@ -451,7 +455,7 @@ def fit(
     random_seed: int = 20260321,
     priors: Priors | None = None,
     base: Params | None = None,
-    burn_in_years: int = 25,
+    burn_in_years: int = 30,
     progressbar: bool = True,
     checkpoint: Path | None = None,
 ) -> Any:

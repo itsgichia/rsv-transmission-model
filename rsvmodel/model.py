@@ -21,6 +21,11 @@ from functools import lru_cache
 import numpy as np
 from scipy.integrate import solve_ivp
 
+try:  # the compiled right-hand side is optional; the numpy one is the reference
+    import numba
+except ImportError:  # pragma: no cover
+    numba = None
+
 DAYS_PER_YEAR = 365.25
 DAYS_PER_MONTH = DAYS_PER_YEAR / 12
 
@@ -245,6 +250,80 @@ def _make_rhs(p: Params, maternal: Product | None, monoclonal: Product | None):
     return rhs
 
 
+def _rhs_core(t, y, b0, amp, peak, sigma, omega, contact, n_by_age, eps, gam, delta, age_rate, births):
+    """The right-hand side without immunisation products, written as loops for Numba.
+
+    Identical to the closure in :func:`_make_rhs` with ``maternal`` and
+    ``monoclonal`` absent; ``tests/test_fit.py`` checks the two agree.
+    """
+    n = N_AGE
+    dy = np.zeros_like(y)
+    beta = b0 * (1.0 + amp * np.cos(2.0 * np.pi * (t - peak) / DAYS_PER_YEAR))
+    lam = np.empty(n)
+    for i in range(n):
+        acc = 0.0
+        for j in range(n):
+            acc += contact[i, j] * omega[j] * y[2 * n + j] / n_by_age[j]
+        lam[i] = beta * acc
+    for i in range(n):
+        s_, e_, i_, r_ = y[i], y[n + i], y[2 * n + i], y[3 * n + i]
+        inf_s = sigma[i] * lam[i] * s_
+        dy[i] += -inf_s + delta * r_
+        dy[n + i] += inf_s - eps * e_
+        dy[2 * n + i] += eps * e_ - gam * i_
+        dy[3 * n + i] += gam * i_ - delta * r_
+        for k in range(4):
+            out = age_rate[i] * y[k * n + i]
+            dy[k * n + i] -= out
+            if i + 1 < n:
+                dy[k * n + i + 1] += out
+        if i < N_MONTHLY:
+            dy[4 * n + 2 * PROTECTION_MONTHS + i] = inf_s
+    pm0 = 4 * n
+    pn0 = 4 * n + PROTECTION_MONTHS
+    c0 = pn0 + PROTECTION_MONTHS
+    for i in range(PROTECTION_MONTHS):
+        pm, pn = y[pm0 + i], y[pn0 + i]
+        inf_pm = sigma[i] * lam[i] * pm
+        inf_pn = sigma[i] * lam[i] * pn
+        dy[n + i] += inf_pm + inf_pn
+        dy[pm0 + i] -= inf_pm
+        dy[pn0 + i] -= inf_pn
+        out_m = age_rate[i] * pm
+        out_n = age_rate[i] * pn
+        dy[pm0 + i] -= out_m
+        dy[pn0 + i] -= out_n
+        if i + 1 < PROTECTION_MONTHS:
+            dy[pm0 + i + 1] += out_m
+            dy[pn0 + i + 1] += out_n
+        else:
+            dy[PROTECTION_MONTHS] += out_m + out_n
+        dy[c0 + i] += inf_pm + inf_pn
+    dy[0] += births
+    return dy
+
+
+if numba is not None:
+    _rhs_core = numba.njit(cache=True)(_rhs_core)
+
+
+def _make_rhs_compiled(p: Params):
+    """Compiled right-hand side for runs without immunisation products."""
+    sigma, omega = p.sigma(), p.omega()
+    b0 = p.b0()
+    contact = np.ascontiguousarray(p.contact_matrix())
+    n_by_age = p.population * p.age_fractions()
+    eps, gam, delta = 1 / p.latent_days, 1 / p.infectious_days, 1 / p.immunity_days
+    age_rate = 1 / AGE_WIDTHS_DAYS
+    births_per_day = p.population / LIFESPAN_DAYS
+    amp, peak = float(p.seasonal_amplitude), float(p.peak_day)
+
+    def rhs(t, y):
+        return _rhs_core(t, y, b0, amp, peak, sigma, omega, contact, n_by_age, eps, gam, delta, age_rate, births_per_day)
+
+    return rhs
+
+
 # scipy's LSODA wrapper is not re-entrant: two solves on different threads raise
 # IntegratorConcurrencyError. The API runs requests on a thread pool, so serialise.
 _SOLVER_LOCK = threading.Lock()
@@ -260,8 +339,9 @@ def _solve(p: Params, y0, t0, t1, maternal=None, monoclonal=None, step=7.0):
 
 
 def _integrate(p, y0, t0, t1, t_eval, maternal, monoclonal):
+    compiled = numba is not None and maternal is None and monoclonal is None
     return solve_ivp(
-        _make_rhs(p, maternal, monoclonal),
+        _make_rhs_compiled(p) if compiled else _make_rhs(p, maternal, monoclonal),
         (t0, t1),
         y0,
         t_eval=t_eval,
