@@ -457,7 +457,8 @@ def save_netcdf(tree: Any, path: Path | str) -> list[str]:
         out.attrs["dropped_for_netcdf"] = ",".join(dropped)
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    out.to_netcdf(str(path))
+    # Name the engine: older xarray falls back to scipy when netCDF4 is absent, and scipy cannot write groups.
+    out.to_netcdf(str(path), engine="h5netcdf")
     return dropped
 
 

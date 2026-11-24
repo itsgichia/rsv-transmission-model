@@ -19,7 +19,7 @@ classifiers = [
 [project.optional-dependencies]
 plots = ["matplotlib>=3.8"]
 fit = ["pymc>=5.20", "arviz>=0.20", "pandas>=2.0", "h5netcdf>=1.3", "h5py>=3.10", "certifi", "numba>=0.60"]
-dev = ["pytest>=8", "matplotlib>=3.8", "pymc>=5.20", "arviz>=0.20", "pandas>=2.0"]
+dev = ["pytest>=8", "matplotlib>=3.8", "pymc>=5.20", "arviz>=0.20", "pandas>=2.0", "h5netcdf>=1.3", "h5py>=3.10"]
 
 [project.urls]
 Homepage = "https://github.com/itsgichia/rsv-transmission-model"

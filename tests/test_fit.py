@@ -129,7 +129,7 @@ def test_save_netcdf_drops_ragged_keeps_string_coords(tmp_path):
     tree.attrs["population"] = 8.3e6
     dropped = save_netcdf(tree, tmp_path / "x.nc")
     assert dropped == ["sample_stats/log_marginal_likelihood"]
-    back = xr.open_datatree(tmp_path / "x.nc")
+    back = xr.open_datatree(tmp_path / "x.nc", engine="h5netcdf")
     assert list(back["posterior"].to_dataset()["band"].values) == ["0-5m", "6-11m"]
     assert "beta" in back["sample_stats"].to_dataset()
     assert back.attrs["population"] == 8.3e6
